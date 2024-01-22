@@ -3,7 +3,7 @@ package wire
 import (
 	//"github.com/samber/do"
 	//"go.uber.org/dig"
-	//"go.uber.org/fx" 
+	//"go.uber.org/fx"
 	"testing"
 )
 
@@ -35,7 +35,7 @@ func NewZZ() Z {
 }
 
 //
-//func TestName1(t *testing.T) {
+//func TestFx(t *testing.T) {
 //	for i := 0; i < 1000000; i++ {
 //		fx.New(
 //			fx.NopLogger,
@@ -50,7 +50,7 @@ func NewZZ() Z {
 //
 //}
 //
-//func TestName3(t *testing.T) {
+//func TestDig(t *testing.T) {
 //	for i := 0; i < 1000000; i++ {
 //		x := dig.New()
 //		x.Provide(NewXX)
@@ -62,7 +62,7 @@ func NewZZ() Z {
 //	}
 //}
 //
-//func TestName14(t *testing.T) {
+//func TestSamber(t *testing.T) {
 //	for i := 0; i < 1000000; i++ {
 //		injector := do.New()
 //
@@ -87,14 +87,14 @@ func NewZZ() Z {
 //
 //}
 
-func TestName2(t *testing.T) {
+func TestReflectBuild(t *testing.T) {
 	for i := 0; i < 1000000; i++ {
-		xx := BuildA[X](NewXX, NewYY, NewZZ, NewZZ)
+		xx := BuildA[X](NewXX, Func(NewYY), NewZZ, NewZZ)
 		xx.z.i = 11
 	}
 }
 
-func TestName22(t *testing.T) {
+func TestGenericBuild(t *testing.T) {
 	for i := 0; i < 1000000; i++ {
 		xx := BuildA[X](
 			Func21(NewXX),
@@ -104,22 +104,4 @@ func TestName22(t *testing.T) {
 		)
 		xx.z.i = 11
 	}
-}
-
-func TestName44(t *testing.T) {
-	type Xx struct {
-		int
-	}
-
-	cx := func(c *func() int) (x Xx) {
-		*c = func() int {
-			return x.int
-		}
-		return
-	}
-
-	var cb func() int
-	xx := cx(&cb)
-	xx.int = 2
-	cb()
 }

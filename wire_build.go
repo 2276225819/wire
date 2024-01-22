@@ -1,7 +1,7 @@
 package wire
 
 func Build(ss ...any) (_ struct{}) {
-	ct := New(ss)
+	ct := _new(ss)
 	_, e := build[*Container](ct, false)
 	if e != nil {
 		panic(e)
@@ -11,7 +11,7 @@ func Build(ss ...any) (_ struct{}) {
 }
 
 func BuildE(ss ...any) (_ error) {
-	ct := New(ss)
+	ct := _new(ss)
 	_, e := build[*Container](ct, false)
 	if e != nil {
 		return e
@@ -20,7 +20,7 @@ func BuildE(ss ...any) (_ error) {
 }
 
 func BuildC(ss ...any) (func(), error) {
-	ct := New(ss)
+	ct := _new(ss)
 	_, e := build[*Container](ct, false)
 	if e != nil {
 		panic(e)
@@ -29,7 +29,7 @@ func BuildC(ss ...any) (func(), error) {
 }
 
 func BuildCE(ss ...any) (func(), error) {
-	ct := New(ss)
+	ct := _new(ss)
 	_, e := build[*Container](ct, true)
 	if e != nil {
 		return nil, e
@@ -38,7 +38,7 @@ func BuildCE(ss ...any) (func(), error) {
 }
 
 func BuildA[ANY any](ss ...any) (null ANY) {
-	ct := New(ss)
+	ct := _new(ss)
 	v, e := build[ANY](ct, false)
 	if e != nil {
 		panic(e)
@@ -48,7 +48,7 @@ func BuildA[ANY any](ss ...any) (null ANY) {
 }
 
 func BuildAE[ANY any](ss ...any) (null ANY, e error) {
-	ct := New(ss)
+	ct := _new(ss)
 	v, e := build[ANY](ct, false)
 	if e != nil {
 		return null, e
@@ -57,7 +57,7 @@ func BuildAE[ANY any](ss ...any) (null ANY, e error) {
 }
 
 func BuildAC[ANY any](ss ...any) (null ANY, _ func()) {
-	ct := New(ss)
+	ct := _new(ss)
 	v, e := build[ANY](ct, true)
 	if e != nil {
 		panic(e)
@@ -66,7 +66,7 @@ func BuildAC[ANY any](ss ...any) (null ANY, _ func()) {
 }
 
 func BuildACE[ANY any](ss ...any) (null ANY, _ func(), e error) {
-	ct := New(ss)
+	ct := _new(ss)
 	v, e := build[ANY](ct, true)
 	if e != nil {
 		return null, nil, e

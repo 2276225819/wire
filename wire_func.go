@@ -74,6 +74,25 @@ func FuncA5[T1, T2, T3, T4, T5, T0 any](fn func(T1, T2, T3, T4, T5) T0) Provided
 	return newSet5x[T1, T2, T3, T4, T5, T0](fn)
 }
 
+func FuncAC0[T0 any](fn func() (T0, func())) ProvidedValue[T0] {
+	return newSet0x[T0](fn)
+}
+func FuncAC1[T1, T0 any](fn func(T1) (T0, func())) ProvidedValue[T0] {
+	return newSet1x[T1, T0](fn)
+}
+func FuncAC2[T1, T2, T0 any](fn func(T1, T2) (T0, func())) ProvidedValue[T0] {
+	return newSet2x[T1, T2, T0](fn)
+}
+func FuncAC3[T1, T2, T3, T0 any](fn func(T1, T2, T3) (T0, func())) ProvidedValue[T0] {
+	return newSet3x[T1, T2, T3, T0](fn)
+}
+func FuncAC4[T1, T2, T3, T4, T0 any](fn func(T1, T2, T3, T4) (T0, func())) ProvidedValue[T0] {
+	return newSet4x[T1, T2, T3, T4, T0](fn)
+}
+func FuncAC5[T1, T2, T3, T4, T5, T0 any](fn func(T1, T2, T3, T4, T5) (T0, func())) ProvidedValue[T0] {
+	return newSet5x[T1, T2, T3, T4, T5, T0](fn)
+}
+
 func FuncAE0[T0 any](fn func() (T0, error)) ProvidedValue[T0] {
 	return newSet0x[T0](fn)
 }
@@ -117,13 +136,19 @@ func newSet0x[T0 any, Tx any](fn Tx) ProvidedValue[T0] {
 		switch f := any(fn).(type) {
 		case func() T0:
 			a = f()
+		case func() (T0, func()):
+			var cb func() = nil
+			a, cb = f()
+			if cb != nil {
+				s.cls(cb)
+			}
 		case func() (T0, error):
 			a, e = f()
 		case func() (T0, func(), error):
 			var cb func() = nil
 			a, cb, e = f()
 			if cb != nil {
-				s.cleans = append(s.cleans, cb)
+				s.cls(cb)
 			}
 		}
 		return
@@ -139,13 +164,19 @@ func newSet1x[T1, T0 any, Tx any](fn Tx) ProvidedValue[T0] {
 		switch f := any(fn).(type) {
 		case func(T1) T0:
 			a = f(t1)
+		case func(T1) (T0, func()):
+			var cb func() = nil
+			a, cb = f(t1)
+			if cb != nil {
+				s.cls(cb)
+			}
 		case func(T1) (T0, error):
 			a, e = f(t1)
 		case func(T1) (T0, func(), error):
 			var cb func() = nil
 			a, cb, e = f(t1)
 			if cb != nil {
-				s.cleans = append(s.cleans, cb)
+				s.cls(cb)
 			}
 		}
 		return
@@ -165,13 +196,19 @@ func newSet2x[T1, T2, T0 any, Tx any](fn Tx) ProvidedValue[T0] {
 		switch f := any(fn).(type) {
 		case func(T1, T2) T0:
 			a = f(t1, t2)
+		case func(T1, T2) (T0, func()):
+			var cb func() = nil
+			a, cb = f(t1, t2)
+			if cb != nil {
+				s.cls(cb)
+			}
 		case func(T1, T2) (T0, error):
 			a, e = f(t1, t2)
 		case func(T1, T2) (T0, func(), error):
 			var cb func() = nil
 			a, cb, e = f(t1, t2)
 			if cb != nil {
-				s.cleans = append(s.cleans, cb)
+				s.cls(cb)
 			}
 		}
 		return
@@ -195,13 +232,19 @@ func newSet3x[T1, T2, T3, T0 any, Tx any](fn Tx) ProvidedValue[T0] {
 		switch f := any(fn).(type) {
 		case func(T1, T2, T3) T0:
 			a = f(t1, t2, t3)
+		case func(T1, T2, T3) (T0, func()):
+			var cb func() = nil
+			a, cb = f(t1, t2, t3)
+			if cb != nil {
+				s.cls(cb)
+			}
 		case func(T1, T2, T3) (T0, error):
 			a, e = f(t1, t2, t3)
 		case func(T1, T2, T3) (T0, func(), error):
 			var cb func() = nil
 			a, cb, e = f(t1, t2, t3)
 			if cb != nil {
-				s.cleans = append(s.cleans, cb)
+				s.cls(cb)
 			}
 		}
 		return
@@ -229,13 +272,19 @@ func newSet4x[T1, T2, T3, T4, T0 any, Tx any](fn Tx) ProvidedValue[T0] {
 		switch f := any(fn).(type) {
 		case func(T1, T2, T3, T4) T0:
 			a = f(t1, t2, t3, t4)
+		case func(T1, T2, T3, T4) (T0, func()):
+			var cb func() = nil
+			a, cb = f(t1, t2, t3, t4)
+			if cb != nil {
+				s.cls(cb)
+			}
 		case func(T1, T2, T3, T4) (T0, error):
 			a, e = f(t1, t2, t3, t4)
 		case func(T1, T2, T3, T4) (T0, func(), error):
 			var cb func() = nil
 			a, cb, e = f(t1, t2, t3, t4)
 			if cb != nil {
-				s.cleans = append(s.cleans, cb)
+				s.cls(cb)
 			}
 		}
 		return
@@ -267,13 +316,19 @@ func newSet5x[T1, T2, T3, T4, T5, T0 any, Tx any](fn Tx) ProvidedValue[T0] {
 		switch f := any(fn).(type) {
 		case func(T1, T2, T3, T4, T5) T0:
 			a = f(t1, t2, t3, t4, t5)
+		case func(T1, T2, T3, T4, T5) (T0, func()):
+			var cb func() = nil
+			a, cb = f(t1, t2, t3, t4, t5)
+			if cb != nil {
+				s.cls(cb)
+			}
 		case func(T1, T2, T3, T4, T5) (T0, error):
 			a, e = f(t1, t2, t3, t4, t5)
 		case func(T1, T2, T3, T4, T5) (T0, func(), error):
 			var cb func() = nil
 			a, cb, e = f(t1, t2, t3, t4, t5)
 			if cb != nil {
-				s.cleans = append(s.cleans, cb)
+				s.cls(cb)
 			}
 		}
 		return
