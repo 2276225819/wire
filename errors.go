@@ -1,7 +1,6 @@
 package wire
 
 import (
-	"path"
 	"runtime"
 	"strconv"
 	"unsafe"
@@ -57,7 +56,7 @@ func (err *_newPtr) Error() string {
 	f := Frame(err.stack)
 	fn := runtime.FuncForPC(f.pc())
 	file, line := fn.FileLine(f.pc())
-	return err.msg + " " + path.Base(file) + ":" + strconv.Itoa(line)
+	return err.msg + " " + file + ":" + strconv.Itoa(line)
 }
 
 //////////// go\pkg\mod\github.com\pkg\errors@v0.9.1\stackPos.go ///////////////////

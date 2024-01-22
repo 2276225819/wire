@@ -123,7 +123,7 @@ func newSet0x[T0 any, Tx any](fn Tx) ProvidedValue[T0] {
 			var cb func() = nil
 			a, cb, e = f()
 			if cb != nil {
-				s.cleans = append(s.cleans, cb)
+				s.cls(cb)
 			}
 		}
 		return
@@ -145,7 +145,7 @@ func newSet1x[T1, T0 any, Tx any](fn Tx) ProvidedValue[T0] {
 			var cb func() = nil
 			a, cb, e = f(t1)
 			if cb != nil {
-				s.cleans = append(s.cleans, cb)
+				s.cls(cb)
 			}
 		}
 		return
@@ -171,7 +171,7 @@ func newSet2x[T1, T2, T0 any, Tx any](fn Tx) ProvidedValue[T0] {
 			var cb func() = nil
 			a, cb, e = f(t1, t2)
 			if cb != nil {
-				s.cleans = append(s.cleans, cb)
+				s.cls(cb)
 			}
 		}
 		return
@@ -201,7 +201,7 @@ func newSet3x[T1, T2, T3, T0 any, Tx any](fn Tx) ProvidedValue[T0] {
 			var cb func() = nil
 			a, cb, e = f(t1, t2, t3)
 			if cb != nil {
-				s.cleans = append(s.cleans, cb)
+				s.cls(cb)
 			}
 		}
 		return
@@ -235,7 +235,7 @@ func newSet4x[T1, T2, T3, T4, T0 any, Tx any](fn Tx) ProvidedValue[T0] {
 			var cb func() = nil
 			a, cb, e = f(t1, t2, t3, t4)
 			if cb != nil {
-				s.cleans = append(s.cleans, cb)
+				s.cls(cb)
 			}
 		}
 		return
@@ -273,7 +273,7 @@ func newSet5x[T1, T2, T3, T4, T5, T0 any, Tx any](fn Tx) ProvidedValue[T0] {
 			var cb func() = nil
 			a, cb, e = f(t1, t2, t3, t4, t5)
 			if cb != nil {
-				s.cleans = append(s.cleans, cb)
+				s.cls(cb)
 			}
 		}
 		return

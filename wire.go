@@ -57,9 +57,11 @@ func Struct[typ any](obj *typ, fieldNames ...string) ProvidedStruct[*typ] {
 			xx := map[string]reflect.Value{} //, 0)
 			if len(fieldNames) == 1 && fieldNames[0] == "*" {
 				for i, l := 0, rfv.NumField(); i < l; i++ {
-					if rft.Field(i).IsExported() {
-						xx[rft.Field(i).Name] = rfv.Field(i)
+					f := rft.Field(i)
+					if !f.IsExported() {
+						continue
 					}
+					xx[rft.Field(i).Name] = rfv.Field(i)
 				}
 			} else {
 				for _, ss := range fieldNames {
@@ -88,11 +90,14 @@ func FieldOf[typ any](obj *typ, fieldNames ...string) InitOption {
 	pcs := stackPos(1)
 	return func(s *Container) {
 		rfv := reflect.TypeOf(obj).Elem()
-		xx := map[string]reflect.Type{}
+		xx := map[string]reflect.StructField{}
 		if len(fieldNames) == 1 && fieldNames[0] == "*" {
 			for i, l := 0, rfv.NumField(); i < l; i++ {
 				f := rfv.Field(i)
-				xx[f.Name] = f.Type
+				if !f.IsExported() {
+					continue
+				}
+				xx[f.Name] = f
 			}
 		} else {
 			for _, ss := range fieldNames {
@@ -100,18 +105,23 @@ func FieldOf[typ any](obj *typ, fieldNames ...string) InitOption {
 				if !ok {
 					continue
 				}
-				xx[f.Name] = f.Type
+				if !f.IsExported() {
+					continue
+				}
+				xx[f.Name] = f
 			}
 		}
-		for n, rf := range xx {
-			KEYF := reflect.NewAt(rf, nil).Interface()
-			s.setExe(KEYF, func(s *Container) (any, error) {
-				var KEYX *typ
+		for n_, rf_ := range xx {
+			n := n_
+			rf := rf_
+			KEYF := reflect.NewAt(rf.Type, nil).Interface()
+			s.set(KEYF, func(s *Container) (any, error) {
+				var KEYX **typ
 				obj, err := s.get(KEYX, "", pcs)
 				if err != nil {
 					return nil, err
 				}
-				rfv := reflect.ValueOf(obj).FieldByName(n)
+				rfv := reflect.ValueOf(obj).Elem().FieldByName(n)
 				return rfv.Interface(), nil
 			})
 		}
@@ -122,6 +132,16 @@ func FieldOf[typ any](obj *typ, fieldNames ...string) InitOption {
 func Func[T any](x T) ProviderFunc {
 	t := reflect.TypeOf(x)
 	v := reflect.ValueOf(x)
+	if v.Kind() != reflect.Func {
+		p := errorsNew("func error", stackPos(1))
+		return ProviderFunc{
+			key: reflect.NewAt(t.Out(0), nil).Interface(),
+			fn: func(s *Container) (a any, e error) {
+				return nil, p
+			},
+		}
+	}
+	fpp := v.Pointer()
 	return ProviderFunc{
 		key: reflect.NewAt(t.Out(0), nil).Interface(),
 		fn: func(s *Container) (a any, e error) {
@@ -129,7 +149,7 @@ func Func[T any](x T) ProviderFunc {
 			xx := make([]reflect.Value, 0, ln)
 			for i := 0; i < ln; i++ {
 				KEYin := reflect.NewAt(t.In(i), nil).Interface()
-				t1, err := s.get(KEYin, "param"+strconv.Itoa(i), funcPos(x))
+				t1, err := s.get(KEYin, "param"+strconv.Itoa(i), funcPos(fpp))
 				if err != nil {
 					return nil, err
 				}
@@ -145,21 +165,21 @@ func Func[T any](x T) ProviderFunc {
 					if e_, ok := e.(error); ok {
 						return nil, e_
 					}
-					return nil, errorsNew("return2 error", funcPos(x))
+					return nil, errorsNew("return1 error", funcPos(fpp))
 				}
 				return result[0].Interface(), nil
 			case 3:
-				e := result[1].Interface()
+				e := result[2].Interface()
 				if e != nil {
 					if e_, ok := e.(error); ok {
 						return nil, e_
 					}
-					return nil, errorsNew("return3 error", funcPos(x))
+					return nil, errorsNew("return2 error", funcPos(fpp))
 				}
-				s.cleans = append(s.cleans, result[2].Interface().(func()))
+				s.cls(result[1].Interface().(func()))
 				return result[0].Interface(), nil
 			default:
-				return nil, errorsNew("param error", funcPos(x))
+				return nil, errorsNew("param error", funcPos(fpp))
 			}
 		},
 	}
@@ -167,13 +187,13 @@ func Func[T any](x T) ProviderFunc {
 
 ///////////////////////////////////////////////////////////////////
 
-// AddSet 加入组
+// AddSet 合并组
 func AddSet(n *ProviderSet, ss ...any) (_ struct{}) {
 	*n = append(*n, ss...)
 	return
 }
 
-// As 绑定类型
+// As 类型转换
 func As[Interface any](f IGet) ProvidedValue[Interface] {
 	pcs := stackPos(1)
 	return func(s *Container) (any, error) {
@@ -189,11 +209,11 @@ func As[Interface any](f IGet) ProvidedValue[Interface] {
 	}
 }
 
-// Out 解析配置并返回值
+// Out 解析返回值
 func Out[T any](x *T) InjectOption {
 	pcs := stackPos(1)
 	return func(s *Container) (a any, e error) {
-		ex, err := get[T](s, "export", pcs)
+		ex, err := get[T](s, "out", pcs)
 		if err != nil {
 			return nil, err
 		}
@@ -202,7 +222,7 @@ func Out[T any](x *T) InjectOption {
 	}
 }
 
-// StructIn 结构体解析  Struct 泛型版
+// StructIn 结构体解析  Struct 泛型版本
 func StructIn[STRUCT any](fn func(*STRUCT)) ProvidedStruct[*STRUCT] {
 	return []IOpt{
 		ProvidedValue[STRUCT](func(s *Container) (_ any, _e error) {
@@ -215,30 +235,33 @@ func StructIn[STRUCT any](fn func(*STRUCT)) ProvidedStruct[*STRUCT] {
 		ProvidedValue[*STRUCT](func(s *Container) (x any, e error) {
 			x, fs := __getFields(new(STRUCT), fn)
 			for i, f_ := range fs {
-				err := f_.SetVal(s, funcPos(fn), "struct X."+strconv.Itoa(i))
+				v, err := s.get(f_.GetKey(), "struct."+strconv.Itoa(i), funcPos(fn))
 				if err != nil {
 					return nil, err
 				}
+				f_.SetVal(v)
 			}
 			return x, nil
 		}),
 	}
 }
 
-// StructOut 结构体字段解析 FieldOf 泛型版
+// StructOut 结构体字段提取 FieldOf 泛型版本
 func StructOut[STRUCT any](fn func(*STRUCT)) InitOption {
 	return func(s *Container) {
-		_, fs := __getFields(new(STRUCT), fn)
+		_, fs := __getFields[STRUCT](new(STRUCT), fn)
 		for i_, f_ := range fs {
 			i := i_
-			f_.FuncXX(s, func(s *Container) (a any, e error) {
+			s.set(f_.GetKey(), func(s *Container) (a any, e error) {
 				nx, err := get[*STRUCT](s, "fieldOf", funcPos(fn))
 				if err != nil {
 					return nil, err
 				}
 				_, nfs := __getFields(nx, fn)
 				for _, f__ := range nfs {
-					f__.SaveXX(s)
+					s.set(f__.GetKey(), func(s *Container) (a any, e error) {
+						return f__.GetVal(), nil
+					})
 				}
 				return nfs[i].GetVal(), nil
 			})
@@ -246,7 +269,7 @@ func StructOut[STRUCT any](fn func(*STRUCT)) InitOption {
 	}
 }
 
-// S 结构体字段定义 StructIn / StructOut
+// S 字段定义 StructIn / StructOut
 func S[T1 any](v *T1) {
 	__structFields = append(__structFields, &fieldAttr[T1]{val: v})
 }
@@ -255,7 +278,7 @@ func S[T1 any](v *T1) {
 //func Invoke(fn ...IOpt) ISet {
 //	return InitOption(func(s *Container) {
 //		for _, opt := range fn {
-//			opt.use(s, key[afterBuild]{})
+//			opt.init(s, key[afterBuild]{})
 //		}
 //	})
 //}
